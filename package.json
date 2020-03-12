@@ -1,5 +1,8 @@
 {
-	"name": "da-share-multiplay",
+	"name": "dashare-multiplay",
+	"legacy": [
+		"da-share-multiplay"
+	],
 	"version": "1.0.0",
 	"api_version": "1.0.0",
 	"keywords": [

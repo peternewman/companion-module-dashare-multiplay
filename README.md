@@ -1,2 +1,2 @@
-# companion-module-da-share-multiplay
+# companion-module-dashare-multiplay
 See HELP.md and LICENSE
