@@ -8,7 +8,7 @@
 	"keywords": [
 		"Software",
 		"Media Server"
-		],
+	],
 	"manufacturer": "da-share",
 	"product": "multiplay",
 	"shortname": "Multiplay",
@@ -18,5 +18,13 @@
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"author": "Jeffrey Davidsz <jeffrey.davidsz@vicreo.eu>",
-	"license": "MIT"
+	"license": "MIT",
+	"homepage": "https://github.com/bitfocus/companion-module-dashare-multiplay#readme",
+	"bugs": {
+		"url": "https://github.com/bitfocus/companion-module-dashare-multiplay/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/bitfocus/companion-module-dashare-multiplay.git"
+	}
 }
