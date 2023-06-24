@@ -1,6 +1,6 @@
 const { InstanceBase, InstanceStatus, TelnetHelper, runEntrypoint } = require('@companion-module/base')
-var actions = require('./actions')
-var presets = require('./presets')
+const { getActions } = require('./actions')
+const { getPresets } = require('./presets')
 
 const TelnetSocket = TelnetHelper
 
@@ -39,7 +39,7 @@ class MultiplayInstance extends InstanceBase {
 			delete self.socket
 		}
 
-		if (self.config.host) {
+		if (self.config.host && self.config.port) {
 			self.socket = new TelnetSocket(self.config.host, self.config.port)
 
 			self.socket.on('status_change', function (status, message) {
@@ -123,11 +123,11 @@ class MultiplayInstance extends InstanceBase {
 	}
 
 	initActions() {
-		this.setActionDefinitions(actions.getActions(this))
+		this.setActionDefinitions(getActions(this))
 	}
 
 	initPresets() {
-		this.setPresetDefinitions(presets.getPresets())
+		this.setPresetDefinitions(getPresets())
 	}
 
 	// TODO(Peter): Add these commands?
