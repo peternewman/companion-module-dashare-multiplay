@@ -3,7 +3,7 @@
 	"legacy": [
 		"da-share-multiplay"
 	],
-	"version": "1.0.2",
+	"version": "2.0.0",
 	"api_version": "1.0.0",
 	"keywords": [
 		"Software",
@@ -11,11 +11,12 @@
 	],
 	"manufacturer": "da-share",
 	"product": "multiplay",
-	"shortname": "Multiplay",
-	"description": "Multiplay Telnet module for Companion",
+	"shortname": "MultiPlay",
+	"description": "MultiPlay Telnet module for Companion",
 	"main": "index.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"format": "prettier -w ."
 	},
 	"author": "Jeffrey Davidsz <jeffrey.davidsz@vicreo.eu>",
 	"license": "MIT",
@@ -26,5 +27,12 @@
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/bitfocus/companion-module-dashare-multiplay.git"
+	},
+	"dependencies": {
+		"@companion-module/base": "~1.0.0"
+	},
+	"prettier": "@companion-module/tools/.prettierrc.json",
+	"devDependencies": {
+		"@companion-module/tools": "^0.5.1"
 	}
 }
