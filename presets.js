@@ -1,6 +1,6 @@
 const { combineRgb } = require('@companion-module/base')
 
-exports.getPresets = function (self) {
+exports.getPresets = function () {
 	const blueShade = combineRgb(51, 51, 255)
 	const white = combineRgb(255, 255, 255)
 	let presets = {}

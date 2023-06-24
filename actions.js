@@ -1,5 +1,5 @@
-module.exports = function (self) {
-	self.setActionDefinitions({
+exports.getActions = function (self) {
+	return {
 		go: {
 			name: 'GO',
 			options: [],
@@ -105,7 +105,7 @@ module.exports = function (self) {
 				await sendCommand(self, 'previous_track')
 			},
 		},
-	})
+	}
 }
 
 async function sendCommand(self, command) {

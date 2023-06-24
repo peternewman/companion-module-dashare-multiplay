@@ -1,60 +1,42 @@
 const { InstanceBase, InstanceStatus, TelnetHelper, runEntrypoint } = require('@companion-module/base')
 var actions = require('./actions')
 var presets = require('./presets')
-var debug
-var log
 
 const TelnetSocket = TelnetHelper
 
 class MultiplayInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
-
-		this.login = false
-		//	// super-constructor
-		//	instance_skel.apply(this, arguments);
-		//	self.status(1,'Initializing');
-		//	self.actions(); // export actions
 	}
 
-	async configUpdated(config) {
-		var self = this
-		self.config = config
-		self.init_tcp()
-		self.initPresets()
+	configUpdated(config) {
+		this.config = config
+		this.initTcp()
+		this.initPresets()
 	}
 
 	incomingData(data) {
 		this.log('debug', data)
 
 		this.updateStatus(InstanceStatus.Ok, 'Received data')
-		this.log('info', 'logged in')
 	}
 
 	async init(config) {
-		var self = this
-
 		this.updateStatus(InstanceStatus.Disconnected)
 
 		this.config = config
 
-		debug = self.debug
-		log = self.log
-
-		this.init_tcp()
-		self.initPresets()
-		actions(this)
-
-		//		self.setActionDefinitions(actions.getActions()); // export actions
+		this.initTcp()
+		this.initActions()
+		this.initPresets()
 	}
 
-	init_tcp() {
-		var self = this
+	initTcp() {
+		let self = this
 
 		if (self.socket !== undefined) {
 			self.socket.destroy()
 			delete self.socket
-			self.login = false
 		}
 
 		if (self.config.host) {
@@ -69,21 +51,17 @@ class MultiplayInstance extends InstanceBase {
 
 			self.socket.on('error', function (err) {
 				self.updateStatus(InstanceStatus.ConnectionFailure, err.message)
-				//debug("Network error", err);
 				self.log('error', 'Network error: ' + err.message)
 			})
 
 			self.socket.on('connect', function () {
 				self.updateStatus(InstanceStatus.Ok)
 				self.log('debug', 'Connected')
-				self.login = false
 			})
 
 			self.socket.on('error', function (err) {
 				self.updateStatus(InstanceStatus.UnknownError, err.message)
-				//debug("Network error", err);
 				self.log('error', 'Network error: ' + err.message)
-				self.login = false
 			})
 
 			// if we get any data, display it to stdout
@@ -108,8 +86,6 @@ class MultiplayInstance extends InstanceBase {
 
 	// Return config fields for web config
 	getConfigFields() {
-		var self = this
-
 		return [
 			{
 				type: 'static-text',
@@ -124,7 +100,7 @@ class MultiplayInstance extends InstanceBase {
 				label: 'IP address of the player',
 				width: 12,
 				default: '127.0.0.1',
-				regex: self.REGEX_IP,
+				regex: this.REGEX_IP,
 			},
 			{
 				type: 'textinput',
@@ -132,25 +108,26 @@ class MultiplayInstance extends InstanceBase {
 				label: 'Port number',
 				width: 6,
 				default: '2000',
-				regex: self.REGEX_PORT,
+				regex: this.REGEX_PORT,
 			},
 		]
 	}
 
 	// When module gets deleted
 	destroy() {
-		var self = this
-
-		if (self.socket !== undefined) {
-			self.socket.destroy()
+		if (this.socket !== undefined) {
+			this.socket.destroy()
 		}
 
-		self.log('debug', 'destroy ' + self.id)
+		this.log('debug', 'destroy ' + this.id)
 	}
 
-	initPresets(updates) {
-		var self = this
-		self.setPresetDefinitions(presets.getPresets(self))
+	initActions() {
+		this.setActionDefinitions(actions.getActions(this))
+	}
+
+	initPresets() {
+		this.setPresetDefinitions(presets.getPresets())
 	}
 
 	// TODO(Peter): Add these commands?
