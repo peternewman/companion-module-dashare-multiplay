@@ -39,7 +39,12 @@ class MultiplayInstance extends InstanceBase {
 			delete self.socket
 		}
 
-		if (self.config.host && self.config.port) {
+		if (
+			self.config.host &&
+			RegExp(this.REGEX_IP).test(self.config.host) &&
+			self.config.port &&
+			RegExp(this.REGEX_PORT).test(self.config.port)
+		) {
 			self.socket = new TelnetSocket(self.config.host, self.config.port)
 
 			self.socket.on('status_change', function (status, message) {
