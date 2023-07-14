@@ -9,6 +9,14 @@ class MultiplayInstance extends InstanceBase {
 		super(internal)
 	}
 
+	localUpdateStatus(status, message) {
+		if (this.localStatus !== status || this.message !== message) {
+			this.updateStatus(status, message)
+			this.localStatus = undefined
+			this.localStatusMessage = undefined
+		}
+	}
+
 	configUpdated(config) {
 		this.config = config
 		this.initTcp()
@@ -18,11 +26,13 @@ class MultiplayInstance extends InstanceBase {
 	incomingData(data) {
 		this.log('debug', data)
 
-		this.updateStatus(InstanceStatus.Ok, 'Received data')
+		this.localUpdateStatus(InstanceStatus.Ok, 'Received data')
 	}
 
 	async init(config) {
-		this.updateStatus(InstanceStatus.Disconnected)
+		this.localStatus = undefined
+		this.localStatusMessage = undefined
+		this.localUpdateStatus(InstanceStatus.Disconnected)
 
 		this.config = config
 
@@ -45,22 +55,22 @@ class MultiplayInstance extends InstanceBase {
 			self.socket.on('status_change', function (status, message) {
 				if (status !== InstanceStatus.Ok) {
 					// TODO(Peter): Remap status here
-					self.updateStatus(status, message)
+					self.localUpdateStatus(status, message)
 				}
 			})
 
 			self.socket.on('error', function (err) {
-				self.updateStatus(InstanceStatus.ConnectionFailure, err.message)
+				self.localUpdateStatus(InstanceStatus.ConnectionFailure, err.message)
 				self.log('error', 'Network error: ' + err.message)
 			})
 
 			self.socket.on('connect', function () {
-				self.updateStatus(InstanceStatus.Ok)
+				self.localUpdateStatus(InstanceStatus.Ok)
 				self.log('debug', 'Connected')
 			})
 
 			self.socket.on('error', function (err) {
-				self.updateStatus(InstanceStatus.UnknownError, err.message)
+				self.localUpdateStatus(InstanceStatus.UnknownError, err.message)
 				self.log('error', 'Network error: ' + err.message)
 			})
 
@@ -82,7 +92,7 @@ class MultiplayInstance extends InstanceBase {
 				}
 			})
 		} else {
-			self.updateStatus(InstanceStatus.BadConfig, 'Host or port missing or invalid')
+			self.localUpdateStatus(InstanceStatus.BadConfig, 'Host or port missing or invalid')
 			self.log('error', 'Bag config: host or port missing or invalid')
 		}
 	}
