@@ -1,4 +1,4 @@
-const { InstanceBase, InstanceStatus, TelnetHelper, runEntrypoint } = require('@companion-module/base')
+const { InstanceBase, InstanceStatus, TelnetHelper, Regex, runEntrypoint } = require('@companion-module/base')
 const { getActions } = require('./actions')
 const { getPresets } = require('./presets')
 
@@ -39,12 +39,7 @@ class MultiplayInstance extends InstanceBase {
 			delete self.socket
 		}
 
-		if (
-			self.config.host &&
-			RegExp(this.REGEX_IP).test(self.config.host) &&
-			self.config.port &&
-			RegExp(this.REGEX_PORT).test(self.config.port)
-		) {
+		if (self.config.host && self.config.port) {
 			self.socket = new TelnetSocket(self.config.host, self.config.port)
 
 			self.socket.on('status_change', function (status, message) {
@@ -86,6 +81,9 @@ class MultiplayInstance extends InstanceBase {
 					self.socket.write(Buffer.from([255, 254, info]))
 				}
 			})
+		} else {
+			self.updateStatus(InstanceStatus.BadConfig, 'Host or port missing or invalid')
+			self.log('error', 'Bag config: host or port missing or invalid')
 		}
 	}
 
@@ -105,7 +103,7 @@ class MultiplayInstance extends InstanceBase {
 				label: 'IP address of the player',
 				width: 12,
 				default: '127.0.0.1',
-				regex: this.REGEX_IP,
+				regex: Regex.IP,
 			},
 			{
 				type: 'textinput',
@@ -113,7 +111,7 @@ class MultiplayInstance extends InstanceBase {
 				label: 'Port number',
 				width: 6,
 				default: '2000',
-				regex: this.REGEX_PORT,
+				regex: Regex.PORT,
 			},
 		]
 	}
