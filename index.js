@@ -12,15 +12,14 @@ class MultiplayInstance extends InstanceBase {
 	localUpdateStatus(status, message) {
 		if (this.localStatus !== status || this.message !== message) {
 			this.updateStatus(status, message)
-			this.localStatus = undefined
-			this.localStatusMessage = undefined
+			this.localStatus = status
+			this.localStatusMessage = message
 		}
 	}
 
 	configUpdated(config) {
 		this.config = config
 		this.initTcp()
-		this.initPresets()
 	}
 
 	incomingData(data) {
