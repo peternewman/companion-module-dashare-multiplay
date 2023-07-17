@@ -25,10 +25,10 @@
 		"url": "git+https://github.com/bitfocus/companion-module-dashare-multiplay.git"
 	},
 	"dependencies": {
-		"@companion-module/base": "~1.0.0"
+		"@companion-module/base": "~1.4.1"
 	},
 	"prettier": "@companion-module/tools/.prettierrc.json",
 	"devDependencies": {
-		"@companion-module/tools": "^0.5.1"
+		"@companion-module/tools": "^1.2.1"
 	}
 }
