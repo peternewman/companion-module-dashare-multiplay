@@ -1,52 +1,124 @@
-exports.getActions = function() {
+exports.getActions = function (self) {
+	return {
+		go: {
+			name: 'GO',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'go')
+			},
+		},
+		stop_all: {
+			name: 'Stop all cues',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'stop_all')
+			},
+		},
+		fade_all: {
+			name: 'Fade all cues',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'fade_all')
+			},
+		},
+		pause_all: {
+			name: 'Pause all cues',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'pause_all')
+			},
+		},
+		resume_all: {
+			name: 'Resume all cues',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'resume_all')
+			},
+		},
+		stopwatch_start: {
+			name: 'Stopwatch start',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'stopwatch_start')
+			},
+		},
+		stopwatch_stop: {
+			name: 'Stopwatch stop',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'stopwatch_stop')
+			},
+		},
+		stopwatch_reset: {
+			name: 'Stopwatch reset',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'stopwatch_reset')
+			},
+		},
+		advance: {
+			name: 'Advance current GO position',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'advance')
+			},
+		},
+		pause: {
+			name: 'Pause cue',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'pause')
+			},
+		},
+		resume: {
+			name: 'Resume cue',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'resume')
+			},
+		},
+		stop: {
+			name: 'Stop cue',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'stop')
+			},
+		},
+		jump: {
+			name: 'Jump to near end of cue',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'jump')
+			},
+		},
+		next_track: {
+			name: 'Next track in playlist',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'next_track')
+			},
+		},
+		previous_track: {
+			name: 'Previous track in playlist',
+			options: [],
+			callback: async (action) => {
+				await sendCommand(self, 'previous_track')
+			},
+		},
+	}
+}
 
-	var actions = {
-		'go': {
-			label: 'GO'
-		},
-		'stop_all': {
-			label: 'Stop all cue\'s'
-		},
-		'fade_all': {
-			label: 'Fade all cue\'s'
-		},
-		'pause_all': {
-			label: 'Pause all cue\'s'
-		},
-		'resume_all': {
-			label: 'Resume all cue\'s'
-		},
-		'stopwatch_start': {
-			label: 'Stopwatch start'
-		},
-		'stopwatch_stop': {
-			label: 'Stopwatch stop'
-		},
-		'stopwatch_reset': {
-			label: 'Stopwatch reset'
-		},
-		'advance': {
-			label: 'Advance current GO position'
-		},
-		'pause': {
-			label: 'Pause cue'
-		},
-		'resume': {
-			label: 'Resume cue'
-		},
-		'stop': {
-			label: 'Stop cue'
-		},
-		'jump': {
-			label: 'Jump to near end of cue'
-		},
-		'next_track': {
-			label: 'Next track in playlist'
-		},
-		'previous_track': {
-			label: 'Previous track in playlist'
+async function sendCommand(self, command) {
+	try {
+		console.log('sending command: ' + command)
+		if (command !== undefined) {
+			if (self.socket !== undefined && self.socket.isConnected) {
+				self.socket.send(command + '\n')
+			} else {
+				console.error('Socket not connected :(')
+			}
 		}
-	};
-
-	return(actions);
+	} catch (error) {
+		self.log(`error`, `sendCommand Action Callback Error: ${error.message}`)
+	}
 }

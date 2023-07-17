@@ -1,219 +1,149 @@
-var instance_skel = require('../../instance_skel');
-var TelnetSocket = require('../../telnet');
-var actions = require('./actions');
-var presets = require('./presets');
-var debug;
-var log;
+const { InstanceBase, InstanceStatus, TelnetHelper, Regex, runEntrypoint } = require('@companion-module/base')
+const { getActions } = require('./actions')
+const { getPresets } = require('./presets')
 
-function instance(system, id, config) {
-	var self = this;
+const TelnetSocket = TelnetHelper
 
-	self.login = false;
-	// super-constructor
-	instance_skel.apply(this, arguments);
-	self.status(1,'Initializing');
-	self.actions(); // export actions
-
-	return self;
-}
-
-instance.prototype.updateConfig = function(config) {
-	var self = this;
-	self.config = config;
-	self.init_tcp();
-	self.initPresets();
-};
-
-instance.prototype.incomingData = function(data) {
-	var self = this;
-	debug(data);
-
-	self.status(self.STATUS_OK);
-
-};
-
-instance.prototype.init = function() {
-	var self = this;
-
-	debug = self.debug;
-	log = self.log;
-
-	self.init_tcp();
-	self.initPresets();
-};
-
-instance.prototype.init_tcp = function() {
-	var self = this;
-
-	if (self.socket !== undefined) {
-		self.socket.destroy();
-		delete self.socket;
-		self.login = false;
+class MultiplayInstance extends InstanceBase {
+	constructor(internal) {
+		super(internal)
 	}
 
-	if (self.config.host) {
-		self.socket = new TelnetSocket(self.config.host, self.config.port);
-
-		self.socket.on('status_change', function (status, message) {
-			if (status !== self.STATUS_OK) {
-				self.status(status, message);
-			}
-		});
-
-		self.socket.on('error', function (err) {
-			debug("Network error", err);
-			self.log('error',"Network error: " + err.message);
-		});
-
-		self.socket.on('connect', function () {
-			debug("Connected");
-			self.login = false;
-		});
-
-		self.socket.on('error', function (err) {
-			debug("Network error", err);
-			self.log('error',"Network error: " + err.message);
-			self.login = false;
-		});
-
-		// if we get any data, display it to stdout
-		self.socket.on("data", function(buffer) {
-			var indata = buffer.toString("utf8");
-			self.incomingData(indata);
-		});
-
-		self.socket.on("iac", function(type, info) {
-			// tell remote we WONT do anything we're asked to DO
-			if (type == 'DO') {
-				self.socket.write(Buffer.from([ 255, 252, info ]));
-			}
-
-			// tell the remote DONT do whatever they WILL offer
-			if (type == 'WILL') {
-				self.socket.write(Buffer.from([ 255, 254, info ]));
-			}
-		});
-	}
-};
-
-// Return config fields for web config
-instance.prototype.config_fields = function () {
-	var self = this;
-
-	return [
-		{
-			type:    'text',
-			id:      'info',
-			width:   12,
-			label:   'Information',
-			value:   'This will establish a telnet connection to Multiplay'
-		},{
-			type:    'textinput',
-			id:      'host',
-			label:   'IP address of the player',
-			width:   12,
-			default: '127.0.0.1',
-			regex:   self.REGEX_IP
-		},{
-			type:    'textinput',
-			id:      'port',
-			label:   'Port number',
-			width:   6,
-			default: '2000',
-			regex:   self.REGEX_PORT
+	localUpdateStatus(status, message) {
+		if (this.localStatus !== status || this.message !== message) {
+			this.updateStatus(status, message)
+			this.localStatus = status
+			this.localStatusMessage = message
 		}
-	]
-};
-
-// When module gets deleted
-instance.prototype.destroy = function() {
-	var self = this;
-
-	if (self.socket !== undefined) {
-		self.socket.destroy();
 	}
 
-	debug("destroy", self.id);
-};
+	configUpdated(config) {
+		this.config = config
+		this.initTcp()
+	}
 
-instance.prototype.actions = function(system) {
-	var self = this;
-	self.setActions(actions.getActions());
-};
+	incomingData(data) {
+		this.log('debug', data)
 
-instance.prototype.initPresets = function (updates) {
-	var self = this;
-	self.setPresetDefinitions(presets.getPresets(self));
-};
+		this.localUpdateStatus(InstanceStatus.Ok, 'Received data')
+	}
 
-instance.prototype.action = function(action) {
+	async init(config) {
+		this.localStatus = undefined
+		this.localStatusMessage = undefined
+		this.localUpdateStatus(InstanceStatus.Disconnected)
 
-	var self = this;
-	var id = action.action;
-	var cmd;
+		this.config = config
 
-	switch (id) {
-		case 'go':
-			cmd = 'go';
-			break;
+		this.initTcp()
+		this.initActions()
+		this.initPresets()
+	}
 
-		case 'stop_all':
-			cmd = 'stop all';
-			break;
+	initTcp() {
+		let self = this
 
-		case 'fade_all':
-			cmd = 'fade all';
-			break;
+		if (self.socket !== undefined) {
+			self.socket.destroy()
+			delete self.socket
+		}
 
-		case 'pause_all':
-			cmd = 'pause all';
-			break;
+		if (self.config.host && self.config.port) {
+			self.socket = new TelnetSocket(self.config.host, self.config.port)
 
-		case 'resume_all':
-			cmd = 'resume all';
-			break;
+			self.socket.on('status_change', function (status, message) {
+				if (status !== InstanceStatus.Ok) {
+					// TODO(Peter): Remap status here
+					self.localUpdateStatus(status, message)
+				}
+			})
 
-		case 'stopwatch_stop':
-			cmd = 'stopwatch stop';
-			break;
+			self.socket.on('error', function (err) {
+				self.localUpdateStatus(InstanceStatus.ConnectionFailure, err.message)
+				self.log('error', 'Network error: ' + err.message)
+			})
 
-		case 'stopwatch_start':
-			cmd = 'stopwatch start';
-			break;
+			self.socket.on('connect', function () {
+				self.localUpdateStatus(InstanceStatus.Ok)
+				self.log('debug', 'Connected')
+			})
 
-		case 'stopwatch_reset':
-			cmd = 'stopwatch reset';
-			break;
+			self.socket.on('error', function (err) {
+				self.localUpdateStatus(InstanceStatus.UnknownError, err.message)
+				self.log('error', 'Network error: ' + err.message)
+			})
 
-		case 'advance':
-			cmd = 'advance';
-			break;
+			// if we get any data, display it to stdout
+			self.socket.on('data', function (buffer) {
+				var indata = buffer.toString('utf8')
+				self.incomingData(indata)
+			})
 
-		case 'pause':
-			cmd = 'pause';
-			break;
+			self.socket.on('iac', function (type, info) {
+				// tell remote we WONT do anything we're asked to DO
+				if (type == 'DO') {
+					self.socket.write(Buffer.from([255, 252, info]))
+				}
 
-		case 'resume':
-			cmd = 'resume';
-			break;
+				// tell the remote DONT do whatever they WILL offer
+				if (type == 'WILL') {
+					self.socket.write(Buffer.from([255, 254, info]))
+				}
+			})
+		} else {
+			self.localUpdateStatus(InstanceStatus.BadConfig, 'Host or port missing or invalid')
+			self.log('error', 'Bag config: host or port missing or invalid')
+		}
+	}
 
-		case 'stop':
-			cmd = 'stop';
-			break;
+	// Return config fields for web config
+	getConfigFields() {
+		return [
+			{
+				type: 'static-text',
+				id: 'info',
+				width: 12,
+				label: 'Information',
+				value: 'This will establish a Telnet connection to MultiPlay',
+			},
+			{
+				type: 'textinput',
+				id: 'host',
+				label: 'IP address of the player',
+				width: 12,
+				default: '127.0.0.1',
+				regex: Regex.IP,
+			},
+			{
+				type: 'textinput',
+				id: 'port',
+				label: 'Port number',
+				width: 6,
+				default: '2000',
+				regex: Regex.PORT,
+			},
+		]
+	}
 
-		case 'jump':
-			cmd = 'jump';
-			break;
+	// When module gets deleted
+	destroy() {
+		if (this.socket !== undefined) {
+			this.socket.destroy()
+		}
 
-		case 'next_track':
-			cmd = 'next track';
-			break;
+		this.log('debug', 'destroy ' + this.id)
+	}
 
-		case 'previous_track':
-			cmd = 'previous track';
-			break;
+	initActions() {
+		this.setActionDefinitions(getActions(this))
+	}
 
-		case 'clear':
+	initPresets() {
+		this.setPresetDefinitions(getPresets())
+	}
+
+	// TODO(Peter): Add these commands?
+	/*		case 'clear':
 			cmd = 'clear';
 			break;
 
@@ -224,18 +154,7 @@ instance.prototype.action = function(action) {
 		case 'quit':
 			cmd = 'quit';
 			break;
-	}
+	*/
+}
 
-	if (cmd !== undefined) {
-
-		if (self.socket !== undefined && self.socket.connected) {
-			self.socket.write(cmd+"\n");
-		} else {
-			debug('Socket not connected :(');
-		}
-
-	}
-};
-
-instance_skel.extendedBy(instance);
-exports = module.exports = instance;
+runEntrypoint(MultiplayInstance, [])

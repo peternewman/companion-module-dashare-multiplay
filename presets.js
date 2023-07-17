@@ -1,70 +1,97 @@
-exports.getPresets = function(self) {
+const { combineRgb } = require('@companion-module/base')
 
-	var presets = [];
+exports.getPresets = function () {
+	const blueShade = combineRgb(51, 51, 255)
+	const white = combineRgb(255, 255, 255)
+	let presets = {}
 
-	presets.push({
+	presets.go = {
 		category: 'Basic control',
-		bank: {
-			style: 'text',
+		name: 'GO',
+		type: 'button',
+		style: {
 			text: 'GO',
 			size: '14',
-			color: self.rgb(255,255,255),
-			bgcolor: self.rgb(51,51,255)
+			color: white,
+			bgcolor: blueShade,
 		},
-		actions: [
+		feedbacks: [],
+		steps: [
 			{
-				action: 'go'
-			}
-		]
-	})
+				down: [
+					{
+						actionId: 'go',
+					},
+				],
+			},
+		],
+	}
 
-	presets.push({
+	presets.stop_all = {
 		category: 'Basic control',
-		bank: {
-			style: 'text',
+		name: 'Stop All',
+		type: 'button',
+		style: {
 			text: 'Stop All',
 			size: '14',
-			color: self.rgb(255,255,255),
-			bgcolor: self.rgb(51,51,255)
+			color: white,
+			bgcolor: blueShade,
 		},
-		actions: [
+		feedbacks: [],
+		steps: [
 			{
-				action: 'stop_all'
-			}
-		]
-	})
+				down: [
+					{
+						actionId: 'stop_all',
+					},
+				],
+			},
+		],
+	}
 
-	presets.push({
+	presets.pause = {
 		category: 'Basic control',
-		bank: {
-			style: 'text',
+		name: 'Pause',
+		type: 'button',
+		style: {
 			text: 'Pause',
 			size: '14',
-			color: self.rgb(255,255,255),
-			bgcolor: self.rgb(51,51,255)
+			color: white,
+			bgcolor: blueShade,
 		},
-		actions: [
+		feedbacks: [],
+		steps: [
 			{
-				action: 'pause'
-			}
-		]
-	})
+				down: [
+					{
+						actionId: 'pause',
+					},
+				],
+			},
+		],
+	}
 
-	presets.push({
+	presets.resume = {
 		category: 'Basic control',
-		bank: {
-			style: 'text',
+		name: 'Resume',
+		type: 'button',
+		style: {
 			text: 'Resume',
 			size: '14',
-			color: self.rgb(255,255,255),
-			bgcolor: self.rgb(51,51,255)
+			color: white,
+			bgcolor: blueShade,
 		},
-		actions: [
+		feedbacks: [],
+		steps: [
 			{
-				action: 'resume'
-			}
-		]
-	})
+				down: [
+					{
+						actionId: 'resume',
+					},
+				],
+			},
+		],
+	}
 
-	return(presets);
+	return presets
 }
